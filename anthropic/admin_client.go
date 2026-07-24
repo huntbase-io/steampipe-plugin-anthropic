@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -38,32 +39,69 @@ type adminListPage struct {
 }
 
 // getJSON performs a GET request against the Admin API and decodes into out.
+// Rate-limit (429) and server (5xx/529) errors are retried with backoff,
+// honoring the retry-after header when present.
 func (c *adminClient) getJSON(ctx context.Context, path string, params url.Values, out interface{}) error {
 	u := adminBaseURL + path
 	if len(params) > 0 {
 		u += "?" + params.Encode()
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("x-api-key", c.apiKey)
-	req.Header.Set("anthropic-version", anthropicVersion)
 
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+	const maxAttempts = 4
+	var lastErr error
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("x-api-key", c.apiKey)
+		req.Header.Set("anthropic-version", anthropicVersion)
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			return err
+		}
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return err
+		}
+
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			return json.Unmarshal(body, out)
+		}
+
+		lastErr = fmt.Errorf("anthropic api error: %s %s: status %d: %s", http.MethodGet, path, resp.StatusCode, string(body))
+		if !isRetryableStatus(resp.StatusCode) || attempt == maxAttempts-1 {
+			return lastErr
+		}
+
+		// Exponential backoff (1s, 2s, 4s), or the server-provided retry-after.
+		delay := time.Duration(1<<attempt) * time.Second
+		if ra := resp.Header.Get("retry-after"); ra != "" {
+			if secs, err := strconv.Atoi(ra); err == nil && secs > 0 && secs <= 120 {
+				delay = time.Duration(secs) * time.Second
+			}
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(delay):
+		}
 	}
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("anthropic admin api error: %s %s: status %d: %s", http.MethodGet, path, resp.StatusCode, string(body))
+	return lastErr
+}
+
+// isRetryableStatus reports whether an HTTP status is worth retrying.
+func isRetryableStatus(status int) bool {
+	switch status {
+	case http.StatusTooManyRequests, http.StatusInternalServerError,
+		http.StatusBadGateway, http.StatusServiceUnavailable,
+		http.StatusGatewayTimeout, 529:
+		return true
 	}
-	return json.Unmarshal(body, out)
+	return false
 }
 
 // pagedListPage is the response envelope for endpoints that paginate with an

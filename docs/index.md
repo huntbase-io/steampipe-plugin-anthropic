@@ -1,11 +1,14 @@
 ---
 organization: Huntbase
 category: ["ai"]
+icon_url: "https://hub.steampipe.io/images/plugins/huntbase-io/anthropic.svg"
 brand_color: "#D97757"
 display_name: "Anthropic"
 short_name: "anthropic"
+name: "anthropic"
 description: "Steampipe plugin to query models, organization administration, compliance data, and usage analytics from the Anthropic API."
 og_description: "Query the Anthropic API with SQL! Open source CLI. No DB required."
+og_image: "/images/plugins/huntbase-io/anthropic-social-graphic.png"
 ---
 
 # Anthropic + Steampipe
@@ -83,3 +86,15 @@ connection "anthropic" {
 ```
 
 Environment variables are used as a fallback when a config argument is not set.
+
+## Multiple Connections
+
+To query multiple Anthropic organizations, define one connection per organization (each with its own keys) and combine them with an [aggregator connection](https://steampipe.io/docs/managing/connections#using-aggregators):
+
+```hcl
+connection "anthropic_all" {
+  plugin      = "local/anthropic"
+  type        = "aggregator"
+  connections = ["anthropic_prod", "anthropic_dev"]
+}
+```
