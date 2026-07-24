@@ -184,7 +184,8 @@ order by a.created_at desc;
 The plugin can also be built as a SQLite loadable extension:
 
 ```sh
-make sqlite    # produces ./steampipe_sqlite_anthropic.so
+make sqlite      # produces ./steampipe_sqlite_anthropic.so
+make postgres    # produces build/postgres/ (steampipe_postgres_anthropic FDW; needs pg_config)
 
 # macOS system sqlite3 blocks .load — use Homebrew's:
 /opt/homebrew/opt/sqlite/bin/sqlite3
