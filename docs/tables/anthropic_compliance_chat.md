@@ -93,3 +93,36 @@ from
 group by
   user_email;
 ```
+
+### List soft-deleted chats
+Chats users deleted in claude.ai remain visible to compliance until the retention window expires — useful in exfiltration investigations.
+
+```sql+postgres
+select
+  id,
+  name,
+  user_email,
+  created_at,
+  deleted_at
+from
+  anthropic_compliance_chat
+where
+  deleted_at is not null
+order by
+  deleted_at desc;
+```
+
+```sql+sqlite
+select
+  id,
+  name,
+  user_email,
+  created_at,
+  deleted_at
+from
+  anthropic_compliance_chat
+where
+  deleted_at is not null
+order by
+  deleted_at desc;
+```

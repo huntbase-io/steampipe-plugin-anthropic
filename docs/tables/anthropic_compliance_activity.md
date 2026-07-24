@@ -87,3 +87,73 @@ from
 where
   type = 'claude_chat_created';
 ```
+
+### Audit admin-surface changes
+Track API key creation, RBAC changes, and SSO configuration edits.
+
+```sql+postgres
+select
+  created_at,
+  type,
+  actor_email,
+  actor_ip_address
+from
+  anthropic_compliance_activity
+where
+  type like 'admin_api_key%'
+  or type like 'rbac_%'
+  or type like 'org_sso%'
+order by
+  created_at desc;
+```
+
+```sql+sqlite
+select
+  created_at,
+  type,
+  actor_email,
+  actor_ip_address
+from
+  anthropic_compliance_activity
+where
+  type like 'admin_api_key%'
+  or type like 'rbac_%'
+  or type like 'org_sso%'
+order by
+  created_at desc;
+```
+
+### Find users active from many distinct IP addresses
+A high distinct-IP count can indicate session sharing or credential theft.
+
+```sql+postgres
+select
+  actor_email,
+  count(distinct actor_ip_address) as distinct_ips
+from
+  anthropic_compliance_activity
+where
+  actor_email is not null
+group by
+  actor_email
+having
+  count(distinct actor_ip_address) > 3
+order by
+  distinct_ips desc;
+```
+
+```sql+sqlite
+select
+  actor_email,
+  count(distinct actor_ip_address) as distinct_ips
+from
+  anthropic_compliance_activity
+where
+  actor_email is not null
+group by
+  actor_email
+having
+  count(distinct actor_ip_address) > 3
+order by
+  distinct_ips desc;
+```

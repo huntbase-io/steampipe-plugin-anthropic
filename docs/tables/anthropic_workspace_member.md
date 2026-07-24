@@ -81,3 +81,30 @@ from
 where
   workspace_role = 'workspace_admin';
 ```
+
+### Find orphaned workspace grants
+Workspace access held by users who are no longer organization members.
+
+```sql+postgres
+select
+  wm.workspace_id,
+  wm.user_id,
+  wm.workspace_role
+from
+  anthropic_workspace_member wm
+  left join anthropic_organization_member m on m.id = wm.user_id
+where
+  m.id is null;
+```
+
+```sql+sqlite
+select
+  wm.workspace_id,
+  wm.user_id,
+  wm.workspace_role
+from
+  anthropic_workspace_member wm
+  left join anthropic_organization_member m on m.id = wm.user_id
+where
+  m.id is null;
+```

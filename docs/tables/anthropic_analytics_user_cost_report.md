@@ -68,3 +68,48 @@ from
 group by
   user_email;
 ```
+
+### Find spend outliers
+Surface users spending more than three times the average.
+
+```sql+postgres
+with spend as (
+  select
+    user_email,
+    sum(amount::numeric) / 100 as usd
+  from
+    anthropic_analytics_user_cost_report
+  group by
+    user_email
+)
+select
+  user_email,
+  usd
+from
+  spend
+where
+  usd > 3 * (select avg(usd) from spend)
+order by
+  usd desc;
+```
+
+```sql+sqlite
+with spend as (
+  select
+    user_email,
+    sum(cast(amount as real)) / 100 as usd
+  from
+    anthropic_analytics_user_cost_report
+  group by
+    user_email
+)
+select
+  user_email,
+  usd
+from
+  spend
+where
+  usd > 3 * (select avg(usd) from spend)
+order by
+  usd desc;
+```

@@ -89,3 +89,32 @@ select
 from
   anthropic_api_key;
 ```
+
+### Find active keys in the default workspace
+Keys not scoped to a workspace bypass workspace-level spend controls.
+
+```sql+postgres
+select
+  name,
+  status,
+  partial_key_hint,
+  created_at
+from
+  anthropic_api_key
+where
+  workspace_id is null
+  and status = 'active';
+```
+
+```sql+sqlite
+select
+  name,
+  status,
+  partial_key_hint,
+  created_at
+from
+  anthropic_api_key
+where
+  workspace_id is null
+  and status = 'active';
+```
