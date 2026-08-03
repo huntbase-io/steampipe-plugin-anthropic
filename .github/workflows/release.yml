@@ -103,7 +103,9 @@ jobs:
           echo "$(brew --prefix postgresql@14)/bin" >> "$GITHUB_PATH"
 
       - name: Build Postgres FDW extension
-        run: make postgres
+        # with_llvm=no skips pgxs LLVM bitcode generation (JIT inlining), which
+        # requires a specific clang version the runners don't ship.
+        run: make postgres with_llvm=no
 
       - name: Package
         run: tar -czf steampipe_postgres_anthropic.${{ matrix.label }}.tar.gz -C build/postgres .
