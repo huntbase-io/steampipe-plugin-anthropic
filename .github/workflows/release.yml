@@ -40,8 +40,9 @@ jobs:
             label: linux_amd64
           - runner: ubuntu-24.04-arm
             label: linux_arm64
-          - runner: macos-13
-            label: darwin_amd64
+          # darwin_amd64 omitted: GitHub retired Intel macOS runners. Intel Mac
+          # users get the plugin binary from goreleaser (CGO-free cross-compile)
+          # and can build the extensions locally with make sqlite / make postgres.
           - runner: macos-latest
             label: darwin_arm64
     runs-on: ${{ matrix.runner }}
@@ -76,8 +77,9 @@ jobs:
             label: linux_amd64
           - runner: ubuntu-24.04-arm
             label: linux_arm64
-          - runner: macos-13
-            label: darwin_amd64
+          # darwin_amd64 omitted: GitHub retired Intel macOS runners. Intel Mac
+          # users get the plugin binary from goreleaser (CGO-free cross-compile)
+          # and can build the extensions locally with make sqlite / make postgres.
           - runner: macos-latest
             label: darwin_arm64
     runs-on: ${{ matrix.runner }}
