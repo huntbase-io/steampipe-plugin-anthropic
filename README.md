@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/anthropic.svg" width="100" alt="Anthropic logo" />
+</p>
+
 # Anthropic Plugin for Steampipe
 
 Use SQL to query models, message batches, files, organization administration, and Claude Enterprise compliance data from the [Anthropic API](https://platform.claude.com/docs/en/api/).
@@ -205,3 +209,7 @@ go build ./...      # compile
 make install        # build + install into ~/.steampipe/plugins/local/anthropic/
 steampipe service restart   # pick up a new binary
 ```
+
+---
+
+The Anthropic name and logo are trademarks of Anthropic, PBC, used here for identification only. This is a community plugin and is not affiliated with or endorsed by Anthropic.
