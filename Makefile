@@ -21,9 +21,15 @@ sqlite:
 # Build the plugin as a standalone Postgres FDW extension
 # (steampipe_postgres_anthropic.so + .control + .sql in build/postgres/) using
 # turbot/steampipe-postgres-fdw. Requires pg_config on PATH.
+# Pinned deliberately. The FDW's main branch resolves steampipe-plugin-sdk transitively through
+# steampipe/v2, so an unpinned clone can change SDK major version between builds with no change
+# here; when it does, the build fails with a PluginFunc type mismatch against this plugin's SDK.
+# v2.3.0-rc.0 is the tag whose resolved SDK is v6, matching go.mod.
+FDW_VERSION ?= v2.3.0-rc.0
+
 postgres:
 	rm -rf build/steampipe-postgres-fdw && mkdir -p build
-	git clone --quiet --depth 1 https://github.com/turbot/steampipe-postgres-fdw.git build/steampipe-postgres-fdw
+	git clone --quiet --depth 1 --branch $(FDW_VERSION) https://github.com/turbot/steampipe-postgres-fdw.git build/steampipe-postgres-fdw
 	cd build/steampipe-postgres-fdw && \
 		$(MAKE) prebuild.go && \
 		rm -rf work && mkdir -p work && rsync -a --exclude='.git' . work/
